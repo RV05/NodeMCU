@@ -1,0 +1,89 @@
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADXL345_U.h>
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
+#include "ThingSpeak.h"
+//----------- Enter you Wi-Fi Details---------//
+char ssid[] = "lot"; //SSID
+char pass[] = "12345678"; // Password
+//-------------------------------------------//
+
+const int trigger = D6;
+const int echo = D5;
+long T;
+float xd,yd,zd;
+float distanceCM;
+const int ChannelField4 = 4;
+WiFiClient  client;
+
+unsigned long myChannelField = ; // Channel ID
+const int ChannelField1 = 1;// Which channel to write data
+const int ChannelField2= 2;
+const int ChannelField3 = 3;
+const char * myWriteAPIKey = ""; // Your write API Key
+void setup() 
+{
+  Serial.begin(115200);
+   pinMode(trigger, OUTPUT);
+  pinMode(echo, INPUT);  
+  if(!accel.begin())
+  {
+    Serial.println("Ooops, no ADXL345 detected ... Check your wiring!");
+    while(1);
+    
+  }
+  accel.setRange(ADXL345_RANGE_4_G);
+   WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client);
+}
+
+void loop() 
+{
+   if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      WiFi.begin(ssid, pass);
+      Serial.print(".");
+      delay(5000);
+    }
+    Serial.println("\nConnected.");
+  }
+
+  sensors_event_t event; 
+  accel.getEvent(&event);
+ 
+  Serial.print((event.acceleration.x)/9.8); Serial.print(",");
+  Serial.print((event.acceleration.y)/9.8); Serial.print(",");
+  Serial.println((event.acceleration.z)/9.8);
+  delay(10);
+  xd=(event.acceleration.x)/9.8;
+  yd=(event.acceleration.y)/9.8;
+  zd=(event.acceleration.z)/9.8;
+  ThingSpeak.writeField(myChannelField, ChannelField1, xd, myWriteAPIKey);
+   ThingSpeak.writeField(myChannelField, ChannelField2, yd, myWriteAPIKey);
+    ThingSpeak.writeField(myChannelField, ChannelField3, zd, myWriteAPIKey);
+  delay(1000);
+
+
+
+ digitalWrite(trigger, LOW);
+  delay(1);
+  digitalWrite(trigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigger, LOW);
+  T = pulseIn(echo, HIGH);
+  distanceCM = T * 0.034;
+  distanceCM = distanceCM / 2;
+  Serial.print("Distance in cm: ");
+  Serial.println(distanceCM);
+  ThingSpeak.writeField(myChannelField, ChannelField4, distanceCM, myWriteAPIKey);
+  delay(1000);
+
+
+  
+}
+
