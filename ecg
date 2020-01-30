@@ -1,0 +1,93 @@
+#include "ThingSpeak.h"
+#include <ESP8266WiFi.h>
+#include <DHT.h>
+#include <DHT_U.h>
+#include "DHT.h" 
+#include <Wire.h>
+char ssid[] = "vit"; //SSID
+char pass[] = "123456789"; // Password
+#define DHTTYPE DHT11   // DHT 11
+#define dht_dpin 0
+DHT dht(dht_dpin, DHTTYPE); 
+ // the piezo is connected to analog pin 0
+const int threshold = 30;
+int sensorReading = 0; // variable to store the value read from the sensor pin
+int p=1;
+int q=0;
+const int ledPin = D0;      // LED connected to digital pin 13
+int ledState = HIGH;
+
+WiFiClient  client;
+unsigned long myChannelField =  ; // Channel ID
+const int ChannelField1 = 1;
+const int ChannelField2 = 2;
+const int ChannelField3 = 3;
+const int ChannelField4 = 4;
+const char * myWriteAPIKey = ""; // Your write API Key
+void setup(void)
+{
+   WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client);
+    Serial.begin(115200);
+    pinMode(ledPin, OUTPUT); // declare the ledPin as as OUTPUT
+     pinMode(D2, INPUT); // Setup for leads off detection LO +
+     pinMode(D3, INPUT);
+    dht.begin();
+
+}
+void loop() {
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      WiFi.begin(ssid, pass);
+      Serial.print(".");
+      delay(5000);
+    }
+    Serial.println("\nConnected.");
+  }
+  
+
+  // if the sensor reading is greater than the threshold:
+  
+  
+// send the string "Knock!" back to the computer, followed by newline
+    else
+    {
+            Serial.println("Knock!");
+            digitalWrite(ledPin,LOW);
+    ThingSpeak.writeField(myChannelField, ChannelField1,q, myWriteAPIKey);
+
+    }
+  delay(100);  // delay to avo
+  
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();         
+    Serial.print("Current humidity = ");
+    Serial.print(h);
+    Serial.print("%  ");
+    Serial.print("temperature = ");
+    Serial.print(t); 
+    Serial.println("C  ");
+
+  ThingSpeak.writeField(myChannelField, ChannelField2,h , myWriteAPIKey);
+  ThingSpeak.writeField(myChannelField, ChannelField3,t , myWriteAPIKey);
+    
+  delay(100);  // delay to avo
+    
+  if((digitalRead(D2) == 1)||(digitalRead(D3) == 1)){
+    Serial.println('!');
+  }
+  else{
+    // send the value of analog input 0:
+      Serial.println(analogRead(A0));
+      ThingSpeak.writeField(myChannelField, ChannelField4,analogRead(A0) , myWriteAPIKey);
+  }
+  //Wait for a bit to keep serial data from saturating
+  delay(1);
+  
+ 
+}
+
