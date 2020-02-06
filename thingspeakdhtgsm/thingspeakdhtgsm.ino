@@ -1,4 +1,4 @@
-//-----Electronics-project-hub>com------//
+
 #include <SoftwareSerial.h>
 
 #include <Adafruit_Sensor.h>
@@ -169,5 +169,5 @@ void Send_data()
   gsm.println("AT+HTTPACTION=0");
   delay(1000);
 }
-//-----Electronics-project-hub>com------//
+
 
